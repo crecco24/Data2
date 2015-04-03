@@ -1,7 +1,7 @@
 
 package data2;
 
-public class Leaf<D extends Comparable> implements Bag {
+public class Leaf<D extends Comparable> implements Bag<D> {
 
     Leaf() {
     }
@@ -18,7 +18,7 @@ public class Leaf<D extends Comparable> implements Bag {
         return true;
     }
 
-    public boolean member(int elt) {
+    public boolean member(D elt) {
         return false;
     }
 

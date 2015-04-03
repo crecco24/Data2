@@ -1,6 +1,6 @@
 package data2;
 
-public class Branch<D extends Comparable> implements Bag {
+public class Branch<D extends Comparable> implements Bag<D> {
 
     Bag<D> left;
     D key;
@@ -35,69 +35,91 @@ public class Branch<D extends Comparable> implements Bag {
         this.multiplicity = 1;
     }
 
+    public int getMult(D elt) {
+        if (elt.compareTo(key) == 0) {
+            return multiplicity;
+        } else if (elt.compareTo(key) < 0) {
+            return this.left.getMult(elt);
+        } else {
+            return this.right.getMult(elt);
+        }
+    }
+
     public int cardinality() {
-            return this.multiplicity + this.left.cardinality() + this.right.cardinality();
+        return this.multiplicity + this.left.cardinality() + this.right.cardinality();
     }
 
     public boolean isEmptyHuh() {
-        return false;
+        return this.multiplicity == 0 || left.isEmptyHuh() || right.isEmptyHuh();
     }
 
     public boolean member(D elt) {
-        if (this.key.equals(elt)) {
+        if (this.key.equals(elt) && this.multiplicity > 0) {
             return true;
         } else {
             return this.left.member(elt) || this.right.member(elt);
         }
     }
 
-    public Bag add(D elt) {
+    public Bag addSome(D elt, int n) {
         if (this.member(elt)) {
+            this.multiplicity = multiplicity + n;
             return this;
         } else {
             if (elt.compareTo(this.key) < 0) {
-                return new Branch(this.left.add(elt), this.key, right);
+                return new Branch(this.left.addSome(elt, n), this.key, right);
             } else {
-                return new Branch(left, this.key, this.right.add(elt));
+                return new Branch(left, this.key, this.right.addSome(elt, n));
+            }
+        }
+    }
+
+    public Bag add(D elt) {
+        return addSome(elt, 1);
+    }
+
+    public Bag removeSome(D elt, int n) {
+        if (elt.equals(this.key)) {
+            int max = Math.max(0, this.multiplicity - n);
+            return new Branch(this.left, this.key, this.right, max);
+        } else {
+            if (elt.compareTo(this.key) < 0) {
+                return new Branch(this.left.removeSome(elt, n), this.key, this.right);
+            } else {
+                return new Branch(this.left, this.key, this.right.removeSome(elt, n));
             }
         }
     }
 
     public Bag remove(D elt) {
-        if (elt.equals(this.key)) {
-            return left.union(right);
-        } else {
-            if (elt.compareTo(this.key) < 0) {
-                return new Branch(this.left.remove(elt), this.key, this.right);
-            } else {
-                return new Branch(this.left, this.key, this.right.remove(elt));
-            }
-        }
+        return removeSome(elt, 1);
+    }
+
+    public Bag removeAll(D elt) {
+        int n = getMult(elt);
+        return removeSome(elt, n);
     }
 
     public Bag union(Bag t) {
-        Bag returner = t.union(this.left).union(this.right).add(this.key);
+        Bag returner = t.union(this.left).union(this.right).addSome(this.key, this.multiplicity);
         return returner;
     }
 
     public Bag inter(Bag t) {
-        Bag returner = new Leaf();
-        if (t.member(this.key)) {
-            returner.add(this.key).union(left.inter(t)).union(right.inter(t));
+        if (t.member(key)) {
+            if (t.getMult(key) > this.getMult(key)) {
+                return new Branch(left.inter(t), key, right.inter(t), this.getMult(key));
+            } else {
+                return new Branch(left.inter(t), key, right.inter(t), t.getMult(key));
+            }
         } else {
-            this.remove(key).inter(t);
+            return left.inter(t).union(right.inter(t));
         }
-        return returner;
     }
 
     public Bag diff(Bag t) {
-        Bag returner = new Leaf();
-        if (!t.member(this.key)) {
-            returner.add(this.key).union(left.diff(t)).union(right.inter(t));
-        } else {
-            this.remove(key).diff(t);
-        }
-        return returner;
+        Bag removed = t.removeSome(key, this.getMult(key));
+        return (left.union(right)).diff(removed);
     }
 
     public boolean equal(Bag t) {
@@ -105,7 +127,7 @@ public class Branch<D extends Comparable> implements Bag {
     }
 
     public boolean subset(Bag t) {
-        return t.member(this.key) && left.subset(t) && right.subset(t);
+        return (t.getMult(key) >= this.getMult(key)) && left.subset(t) && right.subset(t);
     }
 
     public String toString() {
