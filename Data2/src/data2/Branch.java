@@ -1,5 +1,11 @@
 package data2;
 
+import data2.Sequence.Sequence;
+import data2.Sequence.Sequenced;
+import data2.Sequence.Sequence_Branch;
+import data2.Sequence.Sequence_Leaf;
+import data2.Sequence.Sequence_Cat;
+
 public class Branch<D extends Comparable> implements Bag<D> {
 
     Bag<D> left;
@@ -10,28 +16,28 @@ public class Branch<D extends Comparable> implements Bag<D> {
     Branch(Bag<D> left, D key, Bag<D> right, int multiplicity) {
         this.left = left;
         this.right = right;
-        this.key.equals(key);
+        this.key = key;
         this.multiplicity = multiplicity;
     }
 
     Branch(Bag<D> left, D key, Bag<D> right) {
         this.left = left;
         this.right = right;
-        this.key.equals(key);
+        this.key = key;
         this.multiplicity = 1;
     }
 
     Branch(D key, int multiplicity) {
         this.left = new Leaf();
         this.right = new Leaf();
-        this.key.equals(key);
+        this.key = key;
         this.multiplicity = multiplicity;
     }
 
     Branch(D key) {
         this.left = new Leaf();
         this.right = new Leaf();
-        this.key.equals(key);
+        this.key = key;
         this.multiplicity = 1;
     }
 
@@ -50,7 +56,7 @@ public class Branch<D extends Comparable> implements Bag<D> {
     }
 
     public boolean isEmptyHuh() {
-        return this.multiplicity == 0 || left.isEmptyHuh() || right.isEmptyHuh();
+        return this.multiplicity == 0 && left.isEmptyHuh() && right.isEmptyHuh();
     }
 
     public boolean member(D elt) {
@@ -131,6 +137,20 @@ public class Branch<D extends Comparable> implements Bag<D> {
     }
 
     public String toString() {
-        return left.toString() + key + " " + right.toString();
+        return toStringS(this.seq());
+    }
+
+    public String toStringS(Sequence<D> thingy) {
+        StringBuffer all = new StringBuffer("");
+        while (thingy.hasNext()) {
+            all.append(thingy.next().toStringSequence());
+            all.append(" ");
+            thingy = thingy.next();
+        }
+        return all.toString();
+    }
+
+    public Sequence<D> seq() {
+        return new Sequence_Branch(key, multiplicity, (new Sequence_Cat(left.seq(), right.seq())));
     }
 }

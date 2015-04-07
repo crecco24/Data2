@@ -1,6 +1,9 @@
 package data2;
 
-public interface Bag <D extends Comparable>{
+import data2.Sequence.Sequence;
+import data2.Sequence.Sequenced;
+
+public interface Bag <D extends Comparable> extends Sequenced<D>{
     
     int getMult(D elt);
 
