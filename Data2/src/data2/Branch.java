@@ -69,13 +69,13 @@ public class Branch<D extends Comparable> implements Bag<D> {
 
     public Bag addSome(D elt, int n) {
         if (this.member(elt)) {
-            this.multiplicity = multiplicity + n;
-            return this;
+            int newMult = this.multiplicity + n;
+            return new Branch(this.left, this.key, this.right, newMult);
         } else {
             if (elt.compareTo(this.key) < 0) {
-                return new Branch(this.left.addSome(elt, n), this.key, right);
+                return new Branch(this.left.addSome(elt, n), this.key, right, this.multiplicity);
             } else {
-                return new Branch(left, this.key, this.right.addSome(elt, n));
+                return new Branch(left, this.key, this.right.addSome(elt, n), this.multiplicity);
             }
         }
     }
@@ -90,9 +90,9 @@ public class Branch<D extends Comparable> implements Bag<D> {
             return new Branch(this.left, this.key, this.right, max);
         } else {
             if (elt.compareTo(this.key) < 0) {
-                return new Branch(this.left.removeSome(elt, n), this.key, this.right);
+                return new Branch(this.left.removeSome(elt, n), this.key, this.right, this.multiplicity);
             } else {
-                return new Branch(this.left, this.key, this.right.removeSome(elt, n));
+                return new Branch(this.left, this.key, this.right.removeSome(elt, n), this.multiplicity);
             }
         }
     }
@@ -107,8 +107,7 @@ public class Branch<D extends Comparable> implements Bag<D> {
     }
 
     public Bag union(Bag t) {
-        Bag returner = t.union(this.left).union(this.right).addSome(this.key, this.multiplicity);
-        return returner;
+        return t.union(this.left.union(this.right)).addSome(this.key, this.multiplicity);
     }
 
     public Bag inter(Bag t) {
@@ -136,6 +135,28 @@ public class Branch<D extends Comparable> implements Bag<D> {
         return (t.getMult(key) >= this.getMult(key)) && left.subset(t) && right.subset(t);
     }
 
+    public Bag roLeft() {
+        Branch newIden = (Branch) this.right;
+        return new Branch(
+                new Branch(this.left,this.key,newIden.left,this.multiplicity),
+                newIden.key,
+                newIden.right,
+                newIden.multiplicity);
+    }
+
+    public Bag roRight() {
+        Branch newIden = (Branch) this.left;
+        return new Branch(newIden.left, 
+                    newIden.key, 
+                    new Branch(newIden.right,
+                                this.key,
+                                this.right,
+                                this.multiplicity),
+                   newIden.multiplicity);
+    }
+    
+    
+    
     public String toString() {
         return toStringS(this.seq());
     }

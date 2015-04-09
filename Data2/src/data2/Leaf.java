@@ -9,7 +9,7 @@ import data2.Sequence.Sequence_Cat;
 
 public class Leaf<D extends Comparable> implements Bag<D> {
 
-    Leaf() {
+    public Leaf() {
     }
 
     public Bag Empty() {
